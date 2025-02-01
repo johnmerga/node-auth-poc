@@ -143,7 +143,7 @@ app.post("/login", async (req: Request, res: Response, next: NextFunction) => {
 
     const { username, password } = value;
 
-    // Get user from database
+    // Get user from database( for simplicity, we are using in-memory database)
     const user = getUserByUsername(username);
     if (!user) {
       // Use vague message for security
@@ -173,7 +173,7 @@ app.post("/login", async (req: Request, res: Response, next: NextFunction) => {
   }
 });
 
-// Apply error handling middleware
+//error handling middleware
 app.use(errorHandler);
 
 app.listen(port, () => {
