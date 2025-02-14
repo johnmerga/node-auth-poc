@@ -12,6 +12,9 @@ const workflow = new events.EventEmitter();
 workflow.on("startServer", () => {
   server.listen(config.port, () => {
     Logger.info(`Server is running on port ${config.port}`);
+    // list all routes
+    Logger.info("/auth/register - POST - Register a new user");
+    Logger.info("/auth/login - POST - Login");
   });
 });
 /* Other Pre-start workflow steps can be added here. */
