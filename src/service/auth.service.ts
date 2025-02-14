@@ -1,8 +1,26 @@
-import bcrypt from "bcryptjs";
-import type { UserDto } from "../dto/user.dto";
-import { ApiError } from "../errors/api.error";
+import HttpStatus from "http-status";
+import type { UserEntity } from "../dto";
+import { ApiError } from "../middleware/errors/api.error";
 import { TokenService } from "./token.service";
 import { UserService } from "./user.service";
+
+export interface TokenPayload {
+  sub: string; // username
+  type: "user" | "admin";
+  iat?: number;
+  exp?: number;
+}
+
+export interface AuthTokens {
+  access: {
+    token: string;
+    expires: Date;
+  };
+  refresh: {
+    token: string;
+    expires: Date;
+  };
+}
 
 export class AuthService {
   private userService: UserService;
@@ -13,15 +31,15 @@ export class AuthService {
     this.tokenService = new TokenService();
   }
 
-  async loginWithEmailAndPassword(email: string, password: string): Promise<UserDto> {
-    const user = await this.userService.getUserByEmail(email);
+  async loginWithEmailAndPassword(username: string, password: string): Promise<UserEntity> {
+    const user = await this.userService.getUserByUsername(username);
     if (!user) {
-      throw new ApiError(401, "Incorrect email or password");
+      throw new ApiError(HttpStatus.UNAUTHORIZED, "Incorrect email or password");
     }
 
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+    const isPasswordValid = await this.userService.verifyPassword(password, user.passwordHash);
     if (!isPasswordValid) {
-      throw new ApiError(401, "Incorrect email or password");
+      throw new ApiError(HttpStatus.UNAUTHORIZED, "Incorrect email or password");
     }
 
     return user;
@@ -31,11 +49,12 @@ export class AuthService {
     await this.tokenService.deleteToken(refreshToken);
   }
 
-  async refreshAuth(refreshToken: string): Promise<{ user: UserDto; tokens: any }> {
-    const payload = this.tokenService.verifyToken(refreshToken);
+  async refreshAuth(refreshToken: string): Promise<{ user: UserEntity; tokens: AuthTokens }> {
+    const payload = this.tokenService.verifyToken(refreshToken) as TokenPayload;
+
     const user = await this.userService.getUserByUsername(payload.sub);
     if (!user) {
-      throw new ApiError(404, "User not found");
+      throw new ApiError(HttpStatus.NOT_FOUND, "User not found");
     }
 
     await this.tokenService.deleteToken(refreshToken);

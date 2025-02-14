@@ -1,7 +1,7 @@
 import type { NextFunction, Request, Response } from "express";
 import httpStatus from "http-status";
-import config from "../config/config";
-import { Logger } from "../logger";
+import config from "../../config/config";
+import { Logger } from "../../middleware/logger";
 import { ApiError } from "./api.error";
 
 // Helper function to safely get status name

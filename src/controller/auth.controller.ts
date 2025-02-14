@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import httpStatus from "http-status";
-import { Logger } from "../logger";
+import type { UserEntity, UserResponseDto } from "../dto";
 import { AuthService } from "../service/auth.service";
 import { TokenService } from "../service/token.service";
 import { UserService } from "../service/user.service";
@@ -17,17 +17,28 @@ export class AuthController {
     this.tokenService = new TokenService();
   }
 
+  private mapToUserResponse(user: UserEntity): UserResponseDto {
+    const { passwordHash, ...userResponse } = user;
+    return userResponse;
+  }
+
   public register = catchAsync(async (req: Request, res: Response) => {
-    const user = await this.userService.createUser(req.body);
-    const tokens = await this.tokenService.generateAccessAndRefreshToken(user);
-    res.status(httpStatus.CREATED).send({ user, tokens });
+    const userEntity = await this.userService.createUser(req.body);
+    const tokens = await this.tokenService.generateAccessAndRefreshToken(userEntity);
+    res.status(httpStatus.CREATED).send({
+      user: this.mapToUserResponse(userEntity),
+      tokens,
+    });
   });
 
   public login = catchAsync(async (req: Request, res: Response) => {
-    const { email, password } = req.body;
-    const user = await this.authService.loginWithEmailAndPassword(email, password);
-    const tokens = await this.tokenService.generateAccessAndRefreshToken(user);
-    res.status(httpStatus.OK).send({ user, tokens });
+    const { username, password } = req.body;
+    const userEntity = await this.authService.loginWithEmailAndPassword(username, password);
+    const tokens = await this.tokenService.generateAccessAndRefreshToken(userEntity);
+    res.status(httpStatus.OK).send({
+      user: this.mapToUserResponse(userEntity),
+      tokens,
+    });
   });
 
   public logout = catchAsync(async (req: Request, res: Response) => {
@@ -36,7 +47,10 @@ export class AuthController {
   });
 
   public refreshToken = catchAsync(async (req: Request, res: Response) => {
-    const userWithTokens = await this.authService.refreshAuth(req.body.refreshToken);
-    res.send(userWithTokens);
+    const { user: userEntity, tokens } = await this.authService.refreshAuth(req.body.refreshToken);
+    res.send({
+      user: this.mapToUserResponse(userEntity),
+      tokens,
+    });
   });
 }

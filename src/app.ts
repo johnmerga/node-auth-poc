@@ -1,9 +1,9 @@
-import express, { Express, NextFunction, Request, Response } from "express";
-import { errorConverter, errorHandler } from "./errors/error";
-import { morganMiddleware } from "./logger";
-import { authRouter } from "./routes";
-import { ApiError } from "./errors/api.error";
+import express, { type NextFunction, type Request, type Response } from "express";
 import httpStatus from "http-status";
+import { ApiError } from "./middleware/errors";
+import { errorConverter, errorHandler } from "./middleware/errors";
+import { morganMiddleware } from "./middleware/logger";
+import { authRouter } from "./routes";
 
 const app = express();
 // Middleware to parse JSON bodies

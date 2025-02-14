@@ -1,6 +1,6 @@
 import { app } from "./app";
 import config from "./config/config";
-import { Logger } from "./logger";
+import { Logger } from "./middleware/logger/";
 
 import events from "events";
 import http from "http";

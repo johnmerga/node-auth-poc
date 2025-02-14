@@ -1,8 +1,8 @@
 import jwt, { type JwtPayload } from "jsonwebtoken";
 import moment from "moment";
 import config from "../config/config";
-import type { UserDto } from "../dto/user.dto";
-import { ApiError } from "../errors/api.error";
+import type { UserDto, UserResponseDto } from "../dto/user.dto";
+import { ApiError } from "../middleware/errors/api.error";
 
 interface TokenPayload extends JwtPayload {
   sub: string;
@@ -49,7 +49,7 @@ export class TokenService {
     }
   }
 
-  async generateAccessAndRefreshToken(user: UserDto): Promise<AccessAndRefreshTokens> {
+  async generateAccessAndRefreshToken(user: UserResponseDto): Promise<AccessAndRefreshTokens> {
     const accessPayload: TokenPayload = {
       sub: user.username,
       roles: [user.type],

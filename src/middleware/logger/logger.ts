@@ -42,7 +42,10 @@ const transports = [
     filename: "logs/error.log",
     level: "error",
   }),
-  new winston.transports.File({ filename: "logs/all.log", format: winston.format.json() }),
+  new winston.transports.File({
+    filename: "logs/all.log",
+    format: winston.format.json(),
+  }),
 ];
 
 const Logger = winston.createLogger({
