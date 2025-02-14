@@ -1,6 +1,6 @@
 import { type CustomHelpers, ErrorReport } from "joi";
 export const password = (value: string, helpers: CustomHelpers) => {
-  if (value.length <= 5) {
+  if (value.length < 5) {
     return helpers.message({
       custom: "password must be at least 5 characters",
     });

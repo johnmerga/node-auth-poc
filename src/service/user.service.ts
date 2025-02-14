@@ -3,11 +3,12 @@ import HttpStatus from "http-status";
 import type { UserDto, UserEntity, UserResponseDto } from "../dto";
 import { ApiError } from "../middleware/errors/api.error";
 
-const MEMORY_DB: Record<string, UserEntity> = {};
-
 export class UserService {
   private readonly SALT_ROUNDS = 10;
-
+  private static MEMORY_DB: Record<string, UserEntity> = {};
+  async clearDB(): Promise<void> {
+    UserService.MEMORY_DB = {};
+  }
   async hashPassword(password: string): Promise<string> {
     return bcrypt.hash(password, this.SALT_ROUNDS);
   }
@@ -17,20 +18,20 @@ export class UserService {
   }
 
   async getUserByUsername(username: string): Promise<UserEntity | undefined> {
-    return MEMORY_DB[username];
+    return UserService.MEMORY_DB[username];
   }
 
   async getUserByEmail(email: string): Promise<UserEntity | undefined> {
-    return Object.values(MEMORY_DB).find((user) => user.email === email);
+    return Object.values(UserService.MEMORY_DB).find((user) => user.email === email);
   }
 
   async createUser(userDto: UserDto): Promise<UserEntity> {
-    const existingUserByUsername = MEMORY_DB[userDto.username];
+    const existingUserByUsername = UserService.MEMORY_DB[userDto.username];
     if (existingUserByUsername) {
       throw new ApiError(HttpStatus.CONFLICT, "Username already exists");
     }
 
-    const existingUserByEmail = Object.values(MEMORY_DB).find((user) => user.email === userDto.email);
+    const existingUserByEmail = Object.values(UserService.MEMORY_DB).find((user) => user.email === userDto.email);
     if (existingUserByEmail) {
       throw new ApiError(HttpStatus.CONFLICT, "Email already exists");
     }
@@ -44,12 +45,12 @@ export class UserService {
       passwordHash,
     };
 
-    MEMORY_DB[userDto.username] = userEntity;
+    UserService.MEMORY_DB[userDto.username] = userEntity;
     return userEntity;
   }
 
   async updateUser(username: string, updates: Partial<UserDto>): Promise<UserEntity> {
-    const userEntity = MEMORY_DB[username];
+    const userEntity = UserService.MEMORY_DB[username];
     if (!userEntity) {
       throw new ApiError(HttpStatus.NOT_FOUND, "User not found");
     }
@@ -60,21 +61,21 @@ export class UserService {
       passwordHash: updates.password ? await this.hashPassword(updates.password) : userEntity.passwordHash,
     };
 
-    MEMORY_DB[username] = updatedEntity;
+    UserService.MEMORY_DB[username] = updatedEntity;
     return updatedEntity;
   }
 
   async deleteUser(username: string): Promise<void> {
-    const userEntity = MEMORY_DB[username];
+    const userEntity = UserService.MEMORY_DB[username];
     if (!userEntity) {
       throw new ApiError(HttpStatus.NOT_FOUND, "User not found");
     }
 
-    delete MEMORY_DB[username];
+    delete UserService.MEMORY_DB[username];
   }
 
   async validateCredentials(username: string, password: string): Promise<UserEntity> {
-    const userEntity = MEMORY_DB[username];
+    const userEntity = UserService.MEMORY_DB[username];
     if (!userEntity) {
       throw new ApiError(HttpStatus.UNAUTHORIZED, "Invalid credentials");
     }
